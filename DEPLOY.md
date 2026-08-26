@@ -91,8 +91,8 @@ And two are fixed in `render.yaml`:
 **Not set, on purpose.** `DEBUG`, `DB_POOL_SIZE`, `DB_MAX_OVERFLOW`,
 `DB_STATEMENT_CACHE_SIZE`, `ARGON2_MEMORY_COST`, `ARGON2_TIME_COST` and
 `NEWS_CACHE_MINUTES` already default to their correct production values.
-`DEMO_MODE` is omitted too: it defaults to on, but demo access additionally
-requires `ENV` not to be `production`, so setting `ENV` already closes it.
+`DEMO_MODE` is omitted too: it defaults to on, but demo access on production
+additionally requires `DEMO_IN_PRODUCTION`, so setting `ENV` already closes it.
 
 `BOOTSTRAP_ADMIN_EMAIL` defaults to `admin@frontlineprep.pk` — add it if you
 want a different address. It is not a secret, and the seed never re-passwords an
@@ -101,11 +101,25 @@ account that already exists.
 Optional: `CORS_ORIGIN_REGEX=https://.*\.vercel\.app` also allows Vercel
 preview deployments.
 
-**Demo accounts on a portfolio site.** `DEMO_MODE` alone is not enough: demo
-access requires `DEMO_MODE=true` **and** `ENV` not being `production`. That is
-deliberate — a forgotten flag must not publish working credentials. If you *want*
-visitors to try the app without registering, set `ENV=staging` and
-`DEMO_MODE=true`. Be aware this also re-exposes `/docs`.
+**Demo accounts on a portfolio site.** To let visitors try the app without
+registering, add one variable on Render:
+
+    DEMO_IN_PRODUCTION=true
+
+Then redeploy, so the seed creates the account. The sign-in page will offer
+`demo@frontlineprep.pk` / `Demo!2026`, a plain student with no privileges.
+`ENV` stays `production`, so `/docs` stays closed and errors stay terse.
+
+Two guards deliberately survive that opt-in:
+
+- `DEMO_MODE` alone never enables demo on production. It defaults to on, so a
+  single flag must not be all that stands between a live site and published
+  credentials — hence the separate, explicitly-named variable.
+- **The administrator account is never published on production**, opt-in or
+  not. `BOOTSTRAP_ADMIN_PASSWORD` is the real super-admin credential, and
+  anyone who can load the sign-in page can read `/auth/demo`. A production demo
+  offers the candidate account only. To sign in as admin, read the password
+  from the Render dashboard yourself.
 
 **Free tier:** the service sleeps after 15 minutes idle and cold-starts in about
 30 seconds. The health check points at `/health`, which deliberately does not

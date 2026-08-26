@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import pytest
 
 ARTICLE_BODY = """
@@ -320,6 +322,36 @@ class TestDemoAccess:
         monkeypatch.setattr(settings, "ENV", "production")
         response = await client.get("/auth/demo")
         assert response.json() == {"enabled": False, "accounts": []}
+
+    async def test_production_opt_in_offers_the_candidate_only(self, client, seeded, monkeypatch):
+        """Opting in publishes the student account -- never the super admin.
+
+        BOOTSTRAP_ADMIN_PASSWORD is the real administrator credential. Anyone
+        who can load the sign-in page can read this response, so the admin entry
+        has to stay behind the non-production guard even once demo is on.
+        """
+        from app.core.config import settings
+
+        monkeypatch.setattr(settings, "ENV", "production")
+        monkeypatch.setattr(settings, "DEMO_IN_PRODUCTION", True)
+
+        body = (await client.get("/auth/demo")).json()
+        assert body["enabled"] is True
+        assert [a["label"] for a in body["accounts"]] == ["Candidate"]
+
+        serialised = json.dumps(body)
+        assert settings.BOOTSTRAP_ADMIN_PASSWORD not in serialised
+        assert settings.BOOTSTRAP_ADMIN_EMAIL not in serialised
+
+        login = await client.post(
+            "/auth/login",
+            json={
+                "email": body["accounts"][0]["email"],
+                "password": body["accounts"][0]["password"],
+            },
+        )
+        assert login.status_code == 200
+        assert login.json()["user"]["role"] == "student"
 
 
 class TestServicePatterns:

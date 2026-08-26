@@ -71,6 +71,11 @@ class Settings(BaseSettings):
     # validator below) because publishing working credentials to a live
     # platform is exactly as bad as it sounds.
     DEMO_MODE: bool = True
+    # Deliberately publishing demo credentials on a live deployment -- a
+    # portfolio or a shared demo -- takes a second variable whose name says
+    # exactly what it does. Forgetting to flip DEMO_MODE during a deploy still
+    # cannot publish working credentials.
+    DEMO_IN_PRODUCTION: bool = False
     DEMO_STUDENT_EMAIL: str = "demo@frontlineprep.pk"
     DEMO_STUDENT_PASSWORD: str = "Demo!2026"
     DEMO_STUDENT_NAME: str = "Demo Candidate"
@@ -140,12 +145,24 @@ class Settings(BaseSettings):
 
     @property
     def demo_enabled(self) -> bool:
-        """Demo accounts never advertise themselves on a production deployment.
+        """Whether ready-made accounts are offered on the sign-in page.
 
-        Requiring DEMO_MODE *and* a non-production environment means forgetting
-        to flip the flag during a deploy cannot publish working credentials.
+        On production this needs both DEMO_MODE and the explicit
+        DEMO_IN_PRODUCTION opt-in, so forgetting to flip a flag during a deploy
+        cannot publish working credentials by accident.
         """
-        return self.DEMO_MODE and not self.is_production
+        return self.DEMO_MODE and (not self.is_production or self.DEMO_IN_PRODUCTION)
+
+    @property
+    def demo_exposes_admin(self) -> bool:
+        """The admin demo account is never published on a live deployment.
+
+        `BOOTSTRAP_ADMIN_PASSWORD` is the real super-admin credential, not a
+        throwaway. Handing it to anyone who loads the sign-in page would give
+        them the question bank, the review queue and every user record, so a
+        production demo offers the student account only.
+        """
+        return self.demo_enabled and not self.is_production
 
     @field_validator("DATABASE_URL")
     @classmethod

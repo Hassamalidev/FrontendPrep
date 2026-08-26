@@ -59,29 +59,32 @@ async def demo_accounts() -> dict:
     """Ready-made accounts for trying the app, when demo access is enabled.
 
     Returns an empty list rather than a 404 when disabled, so the sign-in page
-    can simply render nothing. Gated on environment as well as the flag: a
-    production deployment never advertises working credentials.
+    can simply render nothing. A production deployment offers the candidate
+    account only, and only after an explicit opt-in -- the administrator entry
+    would hand out the real super-admin password.
     """
     if not settings.demo_enabled:
         return {"enabled": False, "accounts": []}
 
-    return {
-        "enabled": True,
-        "accounts": [
-            {
-                "label": "Candidate",
-                "description": "The student experience: practice, mock tests and the ISSB suite.",
-                "email": settings.DEMO_STUDENT_EMAIL,
-                "password": settings.DEMO_STUDENT_PASSWORD,
-            },
+    accounts = [
+        {
+            "label": "Candidate",
+            "description": "The student experience: practice, mock tests and the ISSB suite.",
+            "email": settings.DEMO_STUDENT_EMAIL,
+            "password": settings.DEMO_STUDENT_PASSWORD,
+        }
+    ]
+    if settings.demo_exposes_admin:
+        accounts.append(
             {
                 "label": "Administrator",
                 "description": "Adds the question generator, the review queue and maintenance.",
                 "email": settings.BOOTSTRAP_ADMIN_EMAIL,
                 "password": settings.BOOTSTRAP_ADMIN_PASSWORD,
-            },
-        ],
-    }
+            }
+        )
+
+    return {"enabled": True, "accounts": accounts}
 
 
 @router.get("/me", response_model=UserPublic)
