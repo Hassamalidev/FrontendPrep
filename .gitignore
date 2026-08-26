@@ -1,0 +1,8 @@
+
+
+# The previous site, kept locally as a reference for its content and imagery.
+# It has its own .git directory, so committing it recorded a *gitlink* -- a
+# submodule pointer to a repository that does not exist -- which made every
+# Vercel build warn "Failed to fetch one or more git submodules". Nothing in
+# the current app depends on it: the service figures are drawn SVG now.
+AcademyFrontend/

@@ -195,3 +195,5 @@ A fresh deploy is about 49 questions and 0 articles.
 | `starter questions: 0` in the deploy log | Not a failure. The seed is idempotent, and 0 means every question was already present. The line now also reports how many are in the bank |
 | `No open ports detected, continuing to scan` | Harmless; the service still comes up. `/` and `/health` now answer HEAD, which is what the scanner probes with |
 | API calls go to the Vercel domain | `VITE_API_URL` unset at build time, so it fell back to the dev default `/api/v1` |
+| "That did not load / Not Found" in the app | Same cause: `VITE_API_URL` was not set, so the app asked Vercel for `/api/v1/...`. Set it and **redeploy** — Vite inlines it at build time |
+| `Failed to fetch one or more git submodules` | A directory with its own `.git` was committed as a gitlink. `git rm --cached <dir>` and add it to `.gitignore` |
