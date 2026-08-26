@@ -189,12 +189,30 @@ async function send(path: string, options: RequestOptions, retrying = false): Pr
   return send(path, options, true);
 }
 
+/**
+ * A 200 carrying HTML means the request never reached the API: the SPA host
+ * answered its own catch-all rewrite. That happens when `VITE_API_URL` is unset
+ * in a deployed build, so requests go same-origin. Left alone it surfaces as
+ * `Unexpected token '<'`, which points nowhere useful -- so name the cause.
+ */
+function assertNotSpaFallback(response: Response, path: string): void {
+  const type = response.headers.get("content-type") ?? "";
+  if (!type.includes("text/html")) return;
+
+  throw new ApiError(
+    response.status,
+    `The API is not reachable at ${BASE_URL}${path} -- that address returned the ` +
+      `web app instead of data. Set VITE_API_URL to the API's URL and redeploy.`,
+  );
+}
+
 export async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const response = await send(path, options);
 
   if (!response.ok) throw await toApiError(response);
   if (response.status === 204) return undefined as T;
 
+  assertNotSpaFallback(response, path);
   return (await response.json()) as T;
 }
 
