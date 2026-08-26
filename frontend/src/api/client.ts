@@ -17,7 +17,35 @@
 
 import { tokens } from "./tokens";
 
-const BASE_URL = import.meta.env.VITE_API_URL ?? "/api/v1";
+/**
+ * Where the API lives.
+ *
+ * `VITE_API_URL` is normalised rather than trusted verbatim. The prefix is a
+ * property of the API, not something a deployer should have to remember, and
+ * setting it to the bare origin is the obvious mistake: every request then
+ * lands on `/news` instead of `/api/v1/news` and the whole app shows "Not
+ * Found" while the backend is perfectly healthy.
+ *
+ * Accepts all of these and produces the same result:
+ *   https://api.example.com
+ *   https://api.example.com/
+ *   https://api.example.com/api/v1
+ *   https://api.example.com/api/v1/
+ */
+const API_PREFIX = "/api/v1";
+
+function resolveBaseUrl(configured: string | undefined): string {
+  const raw = (configured ?? API_PREFIX).trim();
+  if (!raw) return API_PREFIX;
+
+  const withoutTrailingSlash = raw.replace(/\/+$/, "");
+  if (withoutTrailingSlash.endsWith(API_PREFIX)) return withoutTrailingSlash;
+
+  // A bare origin, or a path that stops short of the prefix.
+  return `${withoutTrailingSlash}${API_PREFIX}`;
+}
+
+const BASE_URL = resolveBaseUrl(import.meta.env.VITE_API_URL);
 
 export class ApiError extends Error {
   readonly status: number;
