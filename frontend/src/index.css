@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+/* Design tokens.
+   The palette is built around the three service identities the app themes
+   itself with -- army green, PAF blue, navy teal -- over a warm neutral that
+   keeps long reading passages (articles, briefs, lecturette notes) comfortable.
+   Every colour is declared here so a service hub can re-theme by swapping
+   --color-accent-* on a container rather than by conditional class names. */
+@theme {
+  --color-ink-50: #f7f7f5;
+  --color-ink-100: #eeeeea;
+  --color-ink-200: #dcdcd4;
+  --color-ink-300: #bfbfb2;
+  --color-ink-400: #93938a;
+  --color-ink-500: #6b6b62;
+  --color-ink-600: #4e4e47;
+  --color-ink-700: #3a3a35;
+  --color-ink-800: #262622;
+  --color-ink-900: #161613;
+
+  --color-army-500: #2f5d3a;
+  --color-army-600: #26492e;
+  /* Meter/track step: 1.95:1 on white -- visible as an unfilled remainder
+     without competing with the fill. army-50 measured 1.12:1 and vanished. */
+  --color-army-200: #9fc2a9;
+  --color-army-50: #eef4ef;
+
+  --color-paf-500: #1c3f6e;
+  --color-paf-600: #163257;
+  --color-paf-50: #eaf0f7;
+
+  --color-navy-500: #12405a;
+  --color-navy-600: #0e3248;
+  --color-navy-50: #e9f1f5;
+
+  --color-gold-500: #b8912f;
+  --color-gold-50: #faf4e4;
+
+  --color-danger-500: #b3261e;
+  --color-danger-50: #fdecea;
+  --color-success-500: #2e7d32;
+  --color-success-50: #edf6ee;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Inter", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-card: 0.75rem;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-ink-50 text-ink-800 font-sans antialiased;
+  }
+
+  /* A visible focus ring everywhere: this is a timed-test app used under
+     pressure, and keyboard navigation during a paper has to be obvious. */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-army-500;
+  }
+
+  ::selection {
+    @apply bg-gold-50 text-ink-900;
+  }
+}
+
+@layer utilities {
+  /* Respect a user's reduced-motion preference for the timer and transitions. */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}

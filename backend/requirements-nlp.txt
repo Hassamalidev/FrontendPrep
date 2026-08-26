@@ -1,0 +1,23 @@
+# Optional NLP layer for the agentic question engine.
+#
+# The engine runs fully without these: app/agents/nlp.py detects spaCy at import
+# time and silently falls back to the pure-rule pipeline. Install these only on a
+# runtime with prebuilt wheels (CPython 3.11-3.13). They add ~120 MB RAM.
+#
+#   pip install -r requirements-nlp.txt
+#   python -m spacy download en_core_web_sm
+spacy==3.8.4
+en_core_web_sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl
+
+# --- Optional OCR for photographed answer sheets ---------------------------
+# Also optional: app/agents/ocr.py detects Pillow, pytesseract AND the tesseract
+# binary at import, and falls back to manual transcription when any is missing.
+# The binary is a system package, not a wheel:
+#
+#   apt-get install -y tesseract-ocr        # Debian/Ubuntu, Render build step
+#   pip install -r requirements-nlp.txt
+#
+# Handwriting accuracy is modest even with it installed, which is why the
+# transcription is always presented to the candidate for correction.
+pillow==11.1.0
+pytesseract==0.3.13

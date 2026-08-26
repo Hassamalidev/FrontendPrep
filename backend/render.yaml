@@ -1,0 +1,85 @@
+# Render blueprint.
+#
+# Deliberately short. Every setting the application already defaults correctly
+# is left out -- restating `DB_POOL_SIZE: 5` when the code already says 5 adds a
+# place for the two to drift apart, not a safety net. What remains is the six
+# values that genuinely differ in production, of which only TWO need you to type
+# anything.
+#
+# Free-tier notes: the web service sleeps after 15 minutes idle and cold-starts
+# in ~30s, so the health check points at /health, which deliberately does not
+# touch the database -- waking Neon on every platform ping would burn its
+# compute allowance for nothing. /health/db is the readiness check that does.
+
+services:
+  - type: web
+    name: frontline-prep-api
+    runtime: python
+    plan: free
+    region: singapore          # closest Render region to Pakistan
+    rootDir: backend
+    healthCheckPath: /health
+
+    # Migrations and seed both run here. The seed is idempotent -- rows match on
+    # their natural key -- so this builds the catalog, the ISSB content and the
+    # admin account on the first deploy and is a no-op afterwards. Skip it and
+    # you get a schema with no way to sign in.
+    buildCommand: pip install -r requirements.txt && alembic upgrade head && python -m app.seed
+
+    # One worker: each holds its own connection pool, and a 512 MB instance with
+    # a free Neon project cannot afford a second.
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
+
+    envVars:
+      # --- the two you paste ------------------------------------------------
+
+      # Neon's POOLED connection string (the host contains "-pooler"). Paste it
+      # exactly as Neon gives it: the app rewrites the driver to asyncpg and
+      # strips sslmode/channel_binding, which are libpq options asyncpg rejects.
+      # The pooled endpoint is not optional -- this instance sleeps and wakes
+      # constantly, and without pgbouncer it exhausts Neon's connection limit.
+      - key: DATABASE_URL
+        sync: false
+
+      # Your Vercel origin, exactly: scheme, no trailing slash. Getting this
+      # wrong blocks every browser request while curl keeps working, which is
+      # the single most confusing failure in this stack.
+      #   https://your-app.vercel.app
+      - key: CORS_ORIGINS
+        sync: false
+
+      # --- generated once, by Render ---------------------------------------
+
+      - key: JWT_SECRET
+        generateValue: true
+
+      # Generated rather than defaulted: the code default is a published
+      # placeholder, and shipping a known admin password to a live site is not a
+      # default anyone should inherit by forgetting. Read the generated value
+      # from this service's Environment tab, sign in, and change it.
+      - key: BOOTSTRAP_ADMIN_PASSWORD
+        generateValue: true
+
+      # --- fixed, and not already the code default -------------------------
+
+      # Turns off /docs, and refuses demo accounts regardless of DEMO_MODE.
+      # Set this to `staging` instead if you want visitors to be able to try the
+      # app without registering -- that also re-exposes /docs.
+      - key: ENV
+        value: production
+
+      - key: PYTHON_VERSION
+        value: "3.12.8"
+
+# Everything else is intentionally absent because the application already
+# defaults to the right production value:
+#
+#   DEBUG=false, DB_POOL_SIZE=5, DB_MAX_OVERFLOW=0, DB_STATEMENT_CACHE_SIZE=0,
+#   ARGON2_MEMORY_COST=19456, ARGON2_TIME_COST=2, NEWS_CACHE_MINUTES=30
+#
+# DEMO_MODE is also omitted: it defaults to true, but demo access additionally
+# requires ENV to not be "production", so the guard above already closes it.
+#
+# BOOTSTRAP_ADMIN_EMAIL defaults to admin@frontlineprep.pk. Add it here if you
+# want a different address; it is not a secret and the seed never re-passwords
+# an account that already exists.
