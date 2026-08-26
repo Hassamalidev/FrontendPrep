@@ -1,0 +1,12 @@
+# Keep the image to the backend. Everything here either belongs to the frontend
+# (which deploys to Vercel) or is local-only.
+frontend/
+AcademyFrontend/
+**/node_modules/
+**/.venv/
+**/__pycache__/
+**/*.db
+**/.pytest_cache/
+**/.ruff_cache/
+.git/
+*.md

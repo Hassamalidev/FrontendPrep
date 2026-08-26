@@ -184,7 +184,8 @@ A fresh deploy is about 49 questions and 0 articles.
 
 | Symptom | Cause |
 |---|---|
-| `failed to read dockerfile: open Dockerfile: no such file` | The service is set to the **Docker** runtime with the root directory at the repo root. Either switch Language to Python 3 and set Root Directory to `backend`, or keep Docker and set Root Directory to `backend` so `backend/Dockerfile` is found |
+| `failed to read dockerfile: open Dockerfile: no such file` | A Docker service whose Root Directory is the repo root. There is now a `Dockerfile` at the root that builds the backend, so a redeploy fixes it. Note that **an existing service never reads `render.yaml`** — that file only configures services created *from* a Blueprint |
+| `rejected SSL upgrade` on connect | The database does not offer TLS (Render's internal Postgres, a Docker network, a VPC). Set `DB_SSL=disable`. Neon needs the default `auto` |
 | Blueprint not detected | `render.yaml` must be at the **repository root**, not in `backend/` |
 | Browser requests all fail, `curl` works | `CORS_ORIGINS` does not exactly match the Vercel origin (scheme, no trailing slash) |
 | 404 on refresh at `/dashboard` | `vercel.json` missing or root directory not `frontend` |

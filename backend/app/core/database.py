@@ -38,8 +38,17 @@ if settings.DATABASE_URL.startswith("postgresql+asyncpg"):
             "idle_in_transaction_session_timeout": "30000",
         },
     }
-    if "localhost" not in settings.DATABASE_URL and "127.0.0.1" not in settings.DATABASE_URL:
-        # Neon requires TLS; asyncpg wants an SSLContext rather than ?sslmode=.
+    # asyncpg wants an SSLContext, not the ?sslmode= that libpq accepts, which
+    # is why the URL normaliser strips that parameter.
+    _ssl_mode = settings.DB_SSL.strip().lower()
+    if _ssl_mode == "auto":
+        # Loopback is assumed to be a local development database with no TLS.
+        _local = any(h in settings.DATABASE_URL for h in ("localhost", "127.0.0.1"))
+        _use_ssl = not _local
+    else:
+        _use_ssl = _ssl_mode == "require"
+
+    if _use_ssl:
         _connect_args["ssl"] = ssl.create_default_context()
 
 _engine_kwargs: dict = {

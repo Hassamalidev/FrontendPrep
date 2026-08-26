@@ -39,6 +39,13 @@ class Settings(BaseSettings):
     DB_CONNECT_TIMEOUT: int = 15
     DB_STATEMENT_CACHE_SIZE: int = 0  # required when behind a pgbouncer pooler
 
+    # TLS to Postgres. "auto" requires it for any host that is not loopback,
+    # which is right for Neon and wrong for a database reachable only on a
+    # private network (Render's own Postgres, a Docker network, a VPC) where the
+    # server may not offer TLS at all. Set "disable" there, or "require" to
+    # insist on it everywhere.
+    DB_SSL: str = "auto"          # auto | require | disable
+
     # --- Auth ---------------------------------------------------------------
     JWT_SECRET: str = "dev-only-insecure-secret-change-me"
     JWT_ALGORITHM: str = "HS256"
