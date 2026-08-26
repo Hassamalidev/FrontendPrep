@@ -137,7 +137,11 @@ path has to serve `index.html`.
 
 That is the only one. Two things about it:
 
-- **Include the `/api/v1` suffix.** The client appends paths directly to it.
+- **The `/api/v1` suffix is added for you if you leave it off.** Either
+  form works — `https://your-api.onrender.com` and
+  `https://your-api.onrender.com/api/v1` resolve to the same base. The
+  prefix is a property of the API, not something you should have to
+  remember.
 - **Vite inlines `VITE_*` at build time, not run time.** Changing it in the
   dashboard does nothing until you redeploy.
 
@@ -194,6 +198,6 @@ A fresh deploy is about 49 questions and 0 articles.
 | First request takes ~30s | Render free tier waking. Expected |
 | `starter questions: 0` in the deploy log | Not a failure. The seed is idempotent, and 0 means every question was already present. The line now also reports how many are in the bank |
 | `No open ports detected, continuing to scan` | Harmless; the service still comes up. `/` and `/health` now answer HEAD, which is what the scanner probes with |
-| API calls go to the Vercel domain | `VITE_API_URL` unset at build time, so it fell back to the dev default `/api/v1` |
-| "That did not load / Not Found" in the app | Same cause: `VITE_API_URL` was not set, so the app asked Vercel for `/api/v1/...`. Set it and **redeploy** — Vite inlines it at build time |
+| "That did not load", and the Render log is quiet | The requests never left Vercel: `VITE_API_URL` is unset, so the app asked Vercel for `/api/v1/...`. Set it and **redeploy** — Vite inlines it at build time, so saving the variable alone changes nothing |
+| "That did not load", but the Render log shows `GET /news 404` | The requests arrived without the `/api/v1` prefix. The client now adds it, so redeploy to pick up a bundle that has the fix |
 | `Failed to fetch one or more git submodules` | A directory with its own `.git` was committed as a gitlink. `git rm --cached <dir>` and add it to `.gitignore` |
