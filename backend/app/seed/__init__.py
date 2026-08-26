@@ -13,7 +13,7 @@ from __future__ import annotations
 import logging
 from datetime import UTC, datetime
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.agents.pipeline import fingerprint_text
@@ -391,7 +391,11 @@ async def seed_starter_questions(db: AsyncSession, admin: User) -> int:
                 created += 1
             await db.flush()
 
-    log.info("starter questions: %d", created)
+    # Report both numbers. A bare "0" on a redeploy looks like the seed failed,
+    # when it means every question was already present -- which is the whole
+    # point of the seed being idempotent.
+    total = await db.scalar(select(func.count()).select_from(Question)) or 0
+    log.info("starter questions: %d created, %d in the bank", created, total)
     return created
 
 

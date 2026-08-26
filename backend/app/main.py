@@ -93,7 +93,10 @@ def create_app() -> FastAPI:
             content={"detail": "The database is unavailable. Please try again shortly."},
         )
 
-    @app.get("/", include_in_schema=False)
+    # HEAD as well as GET: platform port scanners (Render's among them) probe
+    # with HEAD, and a GET-only route answers 405, which reads as "no open
+    # ports" in the deploy log until a later GET succeeds.
+    @app.api_route("/", methods=["GET", "HEAD"], include_in_schema=False)
     async def root() -> dict:
         return {
             "name": settings.APP_NAME,
@@ -102,7 +105,7 @@ def create_app() -> FastAPI:
             "api": settings.API_PREFIX,
         }
 
-    @app.get("/health", tags=["health"])
+    @app.api_route("/health", methods=["GET", "HEAD"], tags=["health"])
     async def health() -> dict:
         """Liveness only. Deliberately does not wake the database."""
         return {"status": "ok", "version": settings.APP_VERSION, "env": settings.ENV}

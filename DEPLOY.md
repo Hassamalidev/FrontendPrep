@@ -192,4 +192,6 @@ A fresh deploy is about 49 questions and 0 articles.
 | `prepared statement ... already exists` | `DB_STATEMENT_CACHE_SIZE` is not `0`, or you used the direct rather than pooled Neon string |
 | Cannot sign in after first deploy | The seed did not run — check the build log for `python -m app.seed` |
 | First request takes ~30s | Render free tier waking. Expected |
+| `starter questions: 0` in the deploy log | Not a failure. The seed is idempotent, and 0 means every question was already present. The line now also reports how many are in the bank |
+| `No open ports detected, continuing to scan` | Harmless; the service still comes up. `/` and `/health` now answer HEAD, which is what the scanner probes with |
 | API calls go to the Vercel domain | `VITE_API_URL` unset at build time, so it fell back to the dev default `/api/v1` |
