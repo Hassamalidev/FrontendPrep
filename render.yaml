@@ -1,5 +1,10 @@
 # Render blueprint.
 #
+# This file must live at the REPOSITORY ROOT. Render looks for render.yaml at
+# the root when you create a Blueprint; at backend/render.yaml it is invisible
+# and you end up configuring the service by hand instead. `rootDir` below is
+# what points it at the backend folder.
+#
 # Deliberately short. Every setting the application already defaults correctly
 # is left out -- restating `DB_POOL_SIZE: 5` when the code already says 5 adds a
 # place for the two to drift apart, not a safety net. What remains is the six

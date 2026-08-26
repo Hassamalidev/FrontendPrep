@@ -34,9 +34,13 @@ idle. First request after a suspend takes a few seconds.
 
 ### Option A: the blueprint (recommended)
 
-`backend/render.yaml` is committed. In Render: **New → Blueprint**, point it at
-the repo, set the root directory to `backend`. It creates the service with the
-right build command, health check and most environment variables.
+`render.yaml` is committed **at the repository root** — that is where Render
+looks, and a blueprint inside `backend/` is invisible to it. The file itself
+sets `rootDir: backend`.
+
+In Render: **New → Blueprint**, point it at the repo, apply. It creates the
+service with the right runtime, build command, health check and all six
+environment variables.
 
 ### Option B: by hand
 
@@ -45,7 +49,7 @@ right build command, health check and most environment variables.
 | Setting | Value |
 |---|---|
 | Root directory | `backend` |
-| Runtime | Python 3 |
+| Language / Runtime | **Python 3** — not Docker |
 | Build command | `pip install -r requirements.txt && alembic upgrade head && python -m app.seed` |
 | Start command | `uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1` |
 | Health check path | `/health` |
@@ -180,6 +184,8 @@ A fresh deploy is about 49 questions and 0 articles.
 
 | Symptom | Cause |
 |---|---|
+| `failed to read dockerfile: open Dockerfile: no such file` | The service is set to the **Docker** runtime with the root directory at the repo root. Either switch Language to Python 3 and set Root Directory to `backend`, or keep Docker and set Root Directory to `backend` so `backend/Dockerfile` is found |
+| Blueprint not detected | `render.yaml` must be at the **repository root**, not in `backend/` |
 | Browser requests all fail, `curl` works | `CORS_ORIGINS` does not exactly match the Vercel origin (scheme, no trailing slash) |
 | 404 on refresh at `/dashboard` | `vercel.json` missing or root directory not `frontend` |
 | `prepared statement ... already exists` | `DB_STATEMENT_CACHE_SIZE` is not `0`, or you used the direct rather than pooled Neon string |
